@@ -1,0 +1,22 @@
+{
+  "name": "gj-exchange-poller",
+  "version": "1.0.0",
+  "description": "Exchange Poller Lambda function written in TypeScript",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "GJ",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.11.25",
+    "aws-sdk": "^2.1574.0",
+    "typescript": "^5.4.2"
+  },
+  "dependencies": {
+    "axios": "^1.6.7",
+    "date-fns": "^3.3.1"
+  }
+}
