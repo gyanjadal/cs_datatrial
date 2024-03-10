@@ -4,8 +4,20 @@ import { format } from 'date-fns';
 
 const s3 = new AWS.S3();
 
+/*
+* Description: Handler for invoking exchange api and storing in S3 bucket
+* Params: 
+* event: Json string of the following format/example
+* const event = {
+    "url": "https://api.pro.coinbase.com/products/ETH-USD/book?level=2",
+    "bucketName": "gj-ingestion-bucket",
+    "subBucketName": "ETH-USD",
+    "prefix": "book_snapshot"
+  }
+*/
 export const handler = async (event: any) => {
     // Extract parameters from the event object
+    const runDateTime = new Date();
     const { url, bucketName, subBucketName, prefix } = event;
     let response = null;
     try {
@@ -22,7 +34,7 @@ export const handler = async (event: any) => {
     let fileName = null;
     try {
         // Storing the response in S3
-        fileName = getFileName(subBucketName, prefix);
+        fileName = getFileName(subBucketName, runDateTime, prefix);
         console.log(`Storing response from ${url} to S3 bucket ${bucketName}/$${fileName}`);
         await s3.putObject({
             Bucket: bucketName,
@@ -38,13 +50,14 @@ export const handler = async (event: any) => {
     }
 };
 
-function getFileName(subBucketName: string, prefix: string) {
-    return `${subBucketName}/${formatCurrentDateTime()}_${subBucketName.toLowerCase()}_${prefix}.json:`;
-}
-
-function formatCurrentDateTime(): string {
-    const currentDate = new Date();
-    return format(currentDate, 'yyyyMMdd_HHmmss');
+/*
+* Description: Construct folder and filepath for the ingested response
+* Params: subBucketName based on the currency/stock, 
+*         runDateTime of the current run of the function, 
+*         prefix of the file created
+*/
+function getFileName(subBucketName: string, runDateTime: Date, prefix: string) {
+    return `${subBucketName}/${format(runDateTime, 'yyyyMMdd')}/${format(runDateTime, 'HH')}/${format(runDateTime, 'mmss')}_${subBucketName.toLowerCase()}_${prefix}.json:`;
 }
 
 // Example usage:
