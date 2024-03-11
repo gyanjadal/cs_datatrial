@@ -7,18 +7,12 @@ const s3 = new AWS.S3();
 /*
 * Description: Handler for invoking exchange api and storing in S3 bucket
 * Params: 
-* event: Json string of the following format/example
-* const event = {
-    "url": "https://api.pro.coinbase.com/products/ETH-USD/book?level=2",
-    "bucketName": "gj-ingestion-bucket",
-    "subBucketName": "ETH-USD",
-    "prefix": "book_snapshot"
-  }
+* event: Json string (schema in example below)
 */
 export const handler = async (event: any) => {
     // Extract parameters from the event object
     const runDateTime = new Date();
-    const { url, bucketName, subBucketName, prefix } = event;
+    const { url, bucketName, exchangeName, productName, prefix } = event;
     let response = null;
     try {
         // Polling the URL
@@ -34,7 +28,7 @@ export const handler = async (event: any) => {
     let fileName = null;
     try {
         // Storing the response in S3
-        fileName = getFileName(subBucketName, runDateTime, prefix);
+        fileName = getFileName(exchangeName, productName, prefix, runDateTime);
         console.log(`Storing response from ${url} to S3 bucket ${bucketName}/$${fileName}`);
         await s3.putObject({
             Bucket: bucketName,
@@ -56,16 +50,16 @@ export const handler = async (event: any) => {
 *         runDateTime of the current run of the function, 
 *         prefix of the file created
 */
-function getFileName(subBucketName: string, runDateTime: Date, prefix: string) {
-    return `${subBucketName}/${format(runDateTime, 'yyyyMMdd')}/${format(runDateTime, 'HH')}/${format(runDateTime, 'mmss')}_${subBucketName.toLowerCase()}_${prefix}.json:`;
+function getFileName(exchangeName: string, productName: string, prefix: string, runDateTime: Date) {
+    return `${exchangeName}/${productName}/${format(runDateTime, 'yyyyMMdd')}/${format(runDateTime, 'HH')}/${format(runDateTime, 'mmss')}_${productName.toLowerCase()}_${prefix}.json:`;
 }
 
 // Example usage:
 const event = {
     "url": "https://api.pro.coinbase.com/products/ETH-USD/book?level=2",
     "bucketName": "gj-ingestion-bucket",
-    "subBucketName": "ETH-USD",
+    "exchangeName": "Coinbase",
+    "productName": "ETH-USD",
     "prefix": "book_snapshot"
   }
-
 handler(event);
