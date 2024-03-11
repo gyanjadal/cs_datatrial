@@ -14,7 +14,7 @@ FROM (
             'Bid' AS OrderType,
             explode(split(bids, '],')) AS RawOrder
         FROM
-            deltalive_bronze.orderbook_bronze
+            STREAM (deltalive_bronze.orderbook_bronze)
         UNION ALL
          SELECT
             Exchange,
@@ -24,7 +24,7 @@ FROM (
             'Ask' AS OrderType,
             explode(split(asks, '],')) AS RawOrder
         FROM
-            deltalive_bronze.orderbook_bronze
+            STREAM (deltalive_bronze.orderbook_bronze)
     )
 )
 
