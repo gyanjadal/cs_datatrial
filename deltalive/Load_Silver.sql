@@ -1,10 +1,21 @@
 -- Databricks notebook source
 CREATE STREAMING LIVE TABLE orderbook_silver
+    
 USING DELTA
 AS 
-SELECT *, OrderArray[0] AS Price, OrderArray[1] AS TotalQty, OrderArray[2] AS NumOrders
+SELECT 
+    Exchange::STRING,
+    Product::STRING,
+    Time::TIMESTAMP,
+    Sequence::LONG,
+    OrderType::STRING,
+    OrderArray[0]::DOUBLE AS Price, 
+    OrderArray[1]::DOUBLE AS TotalQty, 
+    OrderArray[2]::Int AS NumOrders
 FROM (
-    SELECT *, split(regexp_replace(RawOrder, '([\[\"\])', ''), ',') AS OrderArray
+    SELECT 
+        *, 
+        split(replace(replace(replace(RawOrder, '[', ''), ']', ''), '"', ''), ',') AS OrderArray
     FROM (
         SELECT
             Exchange,
