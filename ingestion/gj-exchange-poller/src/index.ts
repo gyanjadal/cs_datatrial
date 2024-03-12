@@ -11,14 +11,16 @@ const s3 = new AWS.S3();
 */
 export const handler = async (event: any) => {
     // Extract parameters from the event object
-    const runDateTime = new Date();
+    const runDateTime = new Date().toISOString();
     const { url, bucketName, exchangeName, productName, prefix } = event;
     let response = null;
     try {
         // Polling the URL
         console.log(`Polling ${url}`);
         response = await axios.get(url);
-        console.log(`Successfully polled ${url}. Response status is ${response.status}. Response length is ${response.data.toString().length}`);
+        console.log(`Successfully polled ${url} at ${runDateTime}. Response status is ${response.status}. Response length is ${response.data.toString().length}`);
+        // Add the current poll timestamp to the JSON object
+        response.data.pollTime = runDateTime;
     }
     catch (error) {
         console.error(`Error polling ${url}. Response status is ${response?.status}:  ${error}`);
@@ -28,7 +30,7 @@ export const handler = async (event: any) => {
     let fileName = null;
     try {
         // Storing the response in S3
-        fileName = getFileName(exchangeName, productName, prefix, runDateTime);
+        fileName = constructFileName(exchangeName, productName, prefix, runDateTime);
         console.log(`Storing response from ${url} to S3 bucket ${bucketName}/$${fileName}`);
         await s3.putObject({
             Bucket: bucketName,
@@ -46,12 +48,12 @@ export const handler = async (event: any) => {
 
 /*
 * Description: Construct folder and filepath for the ingested response
-* Params: subBucketName based on the currency/stock, 
+* Params: exchangeName, productName,
 *         runDateTime of the current run of the function, 
 *         prefix of the file created
 */
-function getFileName(exchangeName: string, productName: string, prefix: string, runDateTime: Date) {
-    return `${exchangeName}/${productName}/${format(runDateTime, 'yyyyMMdd')}/${format(runDateTime, 'HH')}/${format(runDateTime, 'mmss')}_${productName.toLowerCase()}_${prefix}.json:`;
+function constructFileName(exchangeName: string, productName: string, prefix: string, runDateTime: string) {
+    return `Exchanges/${exchangeName}/${productName}/${format(runDateTime, 'yyyyMMdd')}/${format(runDateTime, 'HH')}/${format(runDateTime, 'mmss')}_${productName.toLowerCase()}_${prefix}.json:`;
 }
 
 // Example usage:
